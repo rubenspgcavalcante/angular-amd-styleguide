@@ -68,8 +68,8 @@ e.g.: ( **+** Directory, **-** File)
 A module basically is consisted of:
 
 * Controllers
-* Templates
-* Directives and Partials
+* Partials
+* Directives and Templates
 * Services
 * Factories
 * Resources
@@ -127,3 +127,4 @@ name, **index.js**:
 
 
 ### The Main Module and the Starting Structure
+    Under construction ...
