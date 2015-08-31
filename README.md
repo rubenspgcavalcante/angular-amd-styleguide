@@ -9,10 +9,15 @@ of [Django apps](https://docs.djangoproject.com/en/1.8/intro/reusable-apps/).
 
 ## Table of Contents
 1. [Architecture and File Structure](#architecture-and-file-structure)
-    * [File Conventions](#file-conventios)
+    * [File Conventions](#file-conventions)
     * [Module Conventions](#module-conventions)
-    * [The Main Module and the Starting Structure](#the-main-module-and-the-starting-structure)
-
+    * [The Root Module and the Starting Structure](#the-root-module-and-the-starting-structure)
+2. [Code Conventions](#code-conventions)
+    * [Controllers and Partials](#controllers-and-partials)
+    * [Directives and Templates](#directives-and-templates)
+    * [Services and Factories](#services-and-factories)
+    * [Values and Constants](#values-and-constants)
+    
 ## Architecture and File Structure
 The idea is to turn your angular application into small apps, making it more independent,
 so you can reuse this small app in other projects too. The app in the style guide are the **modules**.
@@ -85,6 +90,8 @@ The **module definition** is the file where the Angular module is declared and a
         define([
             'angular'
         ], function (angular) {
+            'use strict';
+            
             var userLogin = angular.module('userLogin', [
                 'ui.router',
                 'userLogin.mySubModule'
@@ -126,5 +133,93 @@ name, **index.js**:
 *To add other modules as dependency, just include they indexes files* 
 
 
-### The Main Module and the Starting Structure
-    Under construction ...
+### The Root Module and the Starting Structure
+
+In your project resources directory there'll be a lot of configuration files, like npm, bower
+gulp, etc. So to don't mix this files with our application source, we create a module that acts
+like the root of the module dependencies tree.
+This is the **App** module which loads all your main application submodules. The global configurations
+of you application is also made here.
+
+* *app.js*
+
+        define([
+            "angular"
+        ], function (angular) {
+            'use strict';
+        
+            // Loading main submodules
+            var app = angular.module("app", [
+                'ui',
+                'commons',
+                'system',
+                'user',
+                ...
+            ]);
+        });
+
+And the index file from App module:
+
+* *index.js*
+
+        define([
+            'ui/index',
+            'commons/index',
+            'system/index',
+            'user/index',
+            ...
+        ]);
+
+There's one difference in the module app. It's because it's not present in the name of the submodules.
+The explication is simple, it's implicit that your main modules are under his hood, so there's no
+need to explicitly declarations. 
+
+**Wrong**:
+    
+    var bar = angular.module('app.foo.bar', [ ... ]);
+
+**Correct**:
+
+    var bar = angular.module('foo.bar', [ ... ]);
+
+
+And then, you'll have your require js main file, where you describe you dependencies and shim
+configurations:
+
+    require.config({
+        baseUrl: './',
+        config: {
+            angular: {
+                noGlobal: true
+            },
+            ...
+        },
+        paths: {
+            angular: 'vendor/angular/angular
+            ...    
+        },
+        shim: {
+            ...    
+        },
+        deps: ['ng-bootstrap']
+        
+And you can use a lib to bootstrap your angular application. This case is using the ng-bootstrap
+with the domReady RequireJS plugin.  
+Ex.:
+
+        define('ng-bootstrap', [
+            'angular',
+            'uiRouter',
+            'domReady',
+            'app/app'
+        ], function (angular) {
+            'use strict';
+            
+            require(['domReady!'], function (document) {
+                angular.bootstrap(document, ['app']);
+            });
+        });
+        
+Now, you can already run you application using AngularJS and RequireJS in the proposed architeture.
+
+# Code Conventions
