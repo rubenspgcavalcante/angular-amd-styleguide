@@ -207,19 +207,91 @@ And you can use a lib to bootstrap your angular application. This case is using 
 with the domReady RequireJS plugin.  
 Ex.:
 
-        define('ng-bootstrap', [
-            'angular',
-            'uiRouter',
-            'domReady',
-            'app/app'
-        ], function (angular) {
-            'use strict';
-            
-            require(['domReady!'], function (document) {
-                angular.bootstrap(document, ['app']);
-            });
+    define('ng-bootstrap', [
+        'angular',
+        'uiRouter',
+        'domReady',
+        'app/app'
+    ], function (angular) {
+        'use strict';
+        
+        require(['domReady!'], function (document) {
+            angular.bootstrap(document, ['app']);
         });
+    });
         
 Now, you can already run you application using AngularJS and RequireJS in the proposed architeture.
 
 # Code Conventions
+
+### Using mv (Model-View) reference
+
+### Constructor and instance names
+
+Constructors always have the **upper camel case** notation:
+
+    var MyController = function ( ... ) { ... };
+    
+    var MyService = function ( ... ) { ... };
+
+The instances always have the **lower camel case** notation:
+
+    var MyAnotherController = function ( myService, anotherService) { ... };
+
+### Using the $inject property
+
+The AngularJS comes with a dependence injector, to load all dependencies of the declared artifact.
+You probably already have seen if you pass as arguments to the constructor, it will load up before
+the provider factory create the instance of the artifact, like:
+
+    ...
+    function ($scope, $filter, userService) {
+        //All the dependecies are already injected!
+        ...
+    }
+    ...
+
+But there's a problem, when you minify you code, all the arguments names will be changed, and
+the Angular injector doesn't knows which are the providers. So, you will probably inject using
+this format:
+
+**Wrong**
+
+    ...
+    ['$scope', '$filter', 'UserService', function ($scope, $filter, userService) {
+        //This is really uggly, and keeps the code very dirty :(
+        ...
+    }]
+    ...
+
+
+So the cleaner way to do this, is just use the *$inject* property. The injector will always first
+check if the given constructor have this property defined and do his work. So, your code will be like:
+
+**Right**
+
+    var UserController = function ($scope, $filter, userService) {
+        //All the dependecies are already injected!
+        ...
+    }
+    UserController.$inject = ['$scope', '$filter', 'UserService']; //Done!
+    
+    myModule.controller('UserController', UserController);
+
+### Declaring the Artifacts
+
+Set the constructor to a variable, with the same name as the declared artifact:
+
+    var MyController = function ( ... ) { ... };
+    MyController.$inject = [ ... ];
+    
+    myModule.controller('MyController', MyController);
+        
+With the exception of the resources instances, because they work like a **Model**:
+
+    var UserResourceFactory = function( ... ) {
+        ...
+    };
+    
+    myModule.factory('User', UserResourceFactory);
+    
