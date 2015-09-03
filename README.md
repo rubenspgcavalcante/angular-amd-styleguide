@@ -228,20 +228,21 @@ Now, you can already run you application using AngularJS and RequireJS in the pr
 
 ### Using vm (View Model) reference
 Following the [John Papa](https://github.com/johnpapa/angular-styleguide#style-y032) recommendation, always use the
-view-model reference in controller and the **controller as** ngController notation in partials
+view-model reference in controller:
 
 ```javascript
-    function UserController() {
-        var vm = this;
-        vm.name = {};
-        vm.sendMail = function() { };
-    }
+function UserController() {
+    var vm = this;
+    vm.userName = "Foo Bar";
+    vm.sendMail = function() { ... };
+}
 ```
+... and the **controller as** ngController notation in partials
 
 ```html
-    <div ng-controller="CustomerController as vm">
-        ...
-    </div>
+<div ng-controller="CustomerController as vm">
+    <button ng-click="vm.sendMail">Send to {{vm.userName}}</button>
+</div>
 ``` 
 
 ### Constructor and instance names
@@ -249,15 +250,15 @@ view-model reference in controller and the **controller as** ngController notati
 Constructors always have the **upper camel case** notation:
 
 ```javascript
-function MyController ( ... ) { ... };
+function MyController ( ... ) { ... }
 
-function MyService ( ... ) { ... };
+function MyService ( ... ) { ... }
 ```
 
 The instances always have the **lower camel case** notation:
 
 ```javascript
-function MyAnotherController ( myService, anotherService) { ... };
+function MyAnotherController ( myService, anotherService) { ... }
 ```
 
 They always must have the artifact type of artifact in appended in the name like, for instance, *HomeController*, 
