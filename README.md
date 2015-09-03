@@ -25,9 +25,9 @@ They're not only Angular modules, but also AMD modules too.
 
 ### File Conventions
 * The files must be named into the dashing notation;
-* The file name must be followed by the type of artifact of the file itself, excepting the module file;
-* The module file must have the same name of the module definition, using the dash notation;
-* A module contains directories to each artifact plus the templates and sub-modules.
+* The file name must be followed by *dot* and the type of artifact delcared in the file, excepting the module file;
+* The module file must have the same name as the module definition, using the dash notation;
+* A module contains directories to each type of artifact plus the templates and sub-modules.
 
 e.g.: ( **+** Directory, **-** File)
 
@@ -87,31 +87,35 @@ The **module definition** is the file where the Angular module is declared and a
 
 * *my-module.js*
 
-        define([
-            'angular'
-        ], function (angular) {
-            'use strict';
-            
-            var userLogin = angular.module('app.userLogin', [
-                'ui.router',
-                'app.userLogin.mySubModule'
-                'app.userLogin.mySubAnotherModule'
-                'app.siblingModule'
-                ...
-            ]);
-            
-            userLogin.config = function(){
-                ...
-            };
-        });
+```javascript
+define([
+    'angular'
+], function (angular) {
+    'use strict';
+    
+    var userLogin = angular.module('app.userLogin', [
+        'ui.router',
+        'app.userLogin.mySubModule'
+        'app.userLogin.mySubAnotherModule'
+        'app.siblingModule'
+        ...
+    ]);
+    
+    userLogin.config = function(){
+        ...
+    };
+});
+```
 
 
 If this module is children of another module or sub-module, use the dot notation into de module declaration:  
 E.g.: *(the module home is parent of module signIn which are parent of module userLogin)*
 
-        ...
-        var userLogin = angular.module('home.signIn.userLogin', [ ... ]);
-        ...
+```javascript
+...
+var userLogin = angular.module('home.signIn.userLogin', [ ... ]);
+...
+```
 
 The **module index** works like a "manifest" of what is the content of the module, which are the sub-modules
 and also which outer modules are dependencies. All modules must have a index file, always with the same
@@ -119,16 +123,18 @@ name, **index.js**:
 
 * *index.js*
 
-        define([
-            'user-login', 
-            'controllers/user.controller',
-            'directives/login-form.directive'
-            'services/login.service',
-            ...
-            'modules/my-submodule/index',
-            'modules/my-another-submodule/index'
-            '../sibling-module/index'
-        ]);
+```javascript
+define([
+    'user-login', 
+    'controllers/user.controller',
+    'directives/login-form.directive'
+    'services/login.service',
+    ...
+    'modules/my-submodule/index',
+    'modules/my-another-submodule/index'
+    '../sibling-module/index'
+]);
+```
 
 *To add other modules as dependency, just include they indexes files* 
 
@@ -136,95 +142,112 @@ name, **index.js**:
 ### The Root Module and the Starting Structure
 
 In your project resources directory there'll be a lot of configuration files, like npm, bower
-gulp, etc. So to don't mix this files with our application source, we create a module that acts
-like the root of the module dependencies tree.
-This is the **App** module which loads all your main application submodules. The global configurations
-of you application is also made here.
+gulp, etc. So to don't mix this files with your application source. Create a module that acts
+like the root of the module dependencies tree. This is the **App** module which loads all your main application 
+sub-modules. The global configurations of you application is also made here.
 
 * *app.js*
 
-        define([
-            "angular"
-        ], function (angular) {
-            'use strict';
-        
-            // Loading main submodules
-            var app = angular.module("app", [
-                'app.ui',
-                'app.commons',
-                'app.system',
-                'app.user',
-                ...
-            ]);
-        });
+```javascript
+define([
+    "angular"
+], function (angular) {
+    'use strict';
+
+    // Loading main submodules
+    var app = angular.module("app", [
+        'app.ui',
+        'app.commons',
+        'app.system',
+        'app.user',
+        ...
+    ]);
+});
+```
 
 And the index file from App module:
 
 * *index.js*
 
-        define([
-            './modules/ui/index',
-            './modules/commons/index',
-            './modules/system/index',
-            './modules/user/index',
-            ...
-        ]);
+```javascript
+define([
+    './modules/ui/index',
+    './modules/commons/index',
+    './modules/system/index',
+    './modules/user/index',
+    ...
+]);
+```
 
 
-And then, you'll have your require js main file, where you describe you dependencies and shim
-configurations:
+Then, you'll have your require js main file, where you describe you dependencies and shim configurations:
 
-    require.config({
-        baseUrl: './',
-        config: {
-            angular: {
-                noGlobal: true
-            },
-            ...
+```javascript
+require.config({
+    baseUrl: './',
+    config: {
+        angular: {
+            noGlobal: true
         },
-        paths: {
-            angular: 'vendor/angular/angular
-            ...    
-        },
-        shim: {
-            ...    
-        },
-        deps: ['ng-bootstrap']
+        ...
+    },
+    paths: {
+        angular: 'vendor/angular/angular,
+        ...    
+    },
+    shim: {
+        ...    
+    },
+    deps: ['ng-bootstrap'],
+    ...
+    }
+```
         
 And you can use a lib to bootstrap your angular application. This case is using the ng-bootstrap
 with the domReady RequireJS plugin.  
 Ex.:
 
-    define('ng-bootstrap', [
-        'angular',
-        'uiRouter',
-        'domReady',
-        'app/app'
-    ], function (angular) {
-        'use strict';
-        
-        require(['domReady!'], function (document) {
-            angular.bootstrap(document, ['app']);
-        });
+```javascript
+define('ng-bootstrap', [
+    'angular',
+    'uiRouter',
+    'domReady',
+    'app/app'
+], function (angular) {
+    'use strict';
+    
+    require(['domReady!'], function (document) {
+        angular.bootstrap(document, ['app']);
     });
+});
+```
         
 Now, you can already run you application using AngularJS and RequireJS in the proposed architeture.
 
 # Code Conventions
+TODO
 
 ### Using mv (Model-View) reference
+TODO
 
 ### Constructor and instance names
 
 Constructors always have the **upper camel case** notation:
 
-    function MyController ( ... ) { ... };
-    
-    function MyService ( ... ) { ... };
+```javascript
+function MyController ( ... ) { ... };
+
+function MyService ( ... ) { ... };
+```
 
 The instances always have the **lower camel case** notation:
 
-    function MyAnotherController ( myService, anotherService) { ... };
+```javascript
+function MyAnotherController ( myService, anotherService) { ... };
+```
+
+They always must have the artifact type of artifact in appended in the name like, for instance, *HomeController*, 
+*LoginService* or *UserFactory*.
 
 ### Using the $inject property
 
@@ -232,12 +255,14 @@ The AngularJS comes with a dependence injector, to load all dependencies of the 
 You probably already have seen if you pass as arguments to the constructor, it will load up before
 the provider factory create the instance of the artifact, like:
 
+```javascript
+...
+function HomeController ($scope, $filter, userService) {
+    //All the dependecies are already injected!
     ...
-    function HomeController ($scope, $filter, userService) {
-        //All the dependecies are already injected!
-        ...
-    }
-    ...
+}
+...
+```
 
 **But there's a problem**, when you minify your code, all the arguments names will be changed, and
 the Angular injector doesn't knows which are the providers. So, to prevent this, you will probably inject using
@@ -245,34 +270,38 @@ this format:
 
 **Avoid**
 
+```javascript
+...
+['$scope', '$filter', 'UserService', function ($scope, $filter, userService) {
+    //This is really uggly, and keeps the code very dirty :(
     ...
-    ['$scope', '$filter', 'UserService', function ($scope, $filter, userService) {
-        //This is really uggly, and keeps the code very dirty :(
-        ...
-    }]
-    ...
-
+}]
+...
+```
 
 So the cleaner way to do this, is just use the *$inject* property. The injector will always first
 check if the given constructor have this property defined and do his work. So, your code will be like:
 
 **Recommended**
 
-    myModule.controller('UserController', UserController);
-        
-    UserController.$inject = ['$scope', '$filter', 'UserService']; //Done!
-    function UserController ($scope, $filter, userService) {
-        //All the dependecies are already injected!
-        ...
-    }
+```javascript
+myModule.controller('UserController', UserController);
     
+UserController.$inject = ['$scope', '$filter', 'UserService']; //Done!
+function UserController ($scope, $filter, userService) {
+    //All the dependecies are already injected!
+    ...
+}
+```
 
-### Declaring the Artifacts
+### Controllers and Partials
+TODO
 
-Set the constructor to a variable, with the same name as the declared artifact:
+### Directives and Templates
+TODO
 
-    myModule.controller('MyController', MyController);
-    
-    MyController.$inject = [ ... ];
-    function MyController ( ... ) { ... };
+### Services and Factories
+TODO
 
+### Values and Constants
+TODO
