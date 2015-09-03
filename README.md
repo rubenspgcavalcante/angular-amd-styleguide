@@ -192,7 +192,7 @@ require.config({
         ...
     },
     paths: {
-        angular: 'vendor/angular/angular,
+        angular: 'vendor/angular/angular',
         ...    
     },
     shim: {
@@ -225,10 +225,24 @@ define('ng-bootstrap', [
 Now, you can already run you application using AngularJS and RequireJS in the proposed architeture.
 
 # Code Conventions
-TODO
 
-### Using mv (Model-View) reference
-TODO
+### Using vm (View Model) reference
+Following the [John Papa](https://github.com/johnpapa/angular-styleguide#style-y032) recommendation, always use the
+view-model reference in controller and the **controller as** ngController notation in partials
+
+```javascript
+    function UserController() {
+        var vm = this;
+        vm.name = {};
+        vm.sendMail = function() { };
+    }
+```
+
+```html
+    <div ng-controller="CustomerController as vm">
+        ...
+    </div>
+``` 
 
 ### Constructor and instance names
 
