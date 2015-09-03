@@ -92,15 +92,15 @@ The **module definition** is the file where the Angular module is declared and a
         ], function (angular) {
             'use strict';
             
-            var userLogin = angular.module('userLogin', [
+            var userLogin = angular.module('app.userLogin', [
                 'ui.router',
-                'userLogin.mySubModule'
-                'userLogin.mySubAnotherModule'
-                'siblingModule'
+                'app.userLogin.mySubModule'
+                'app.userLogin.mySubAnotherModule'
+                'app.siblingModule'
                 ...
             ]);
             
-            myModule.config = function(){
+            userLogin.config = function(){
                 ...
             };
         });
@@ -110,7 +110,7 @@ If this module is children of another module or sub-module, use the dot notation
 E.g.: *(the module home is parent of module signIn which are parent of module userLogin)*
 
         ...
-        var userLogin = angular.module('home.signIn.userLogin', [
+        var userLogin = angular.module('home.signIn.userLogin', [ ... ]);
         ...
 
 The **module index** works like a "manifest" of what is the content of the module, which are the sub-modules
@@ -150,10 +150,10 @@ of you application is also made here.
         
             // Loading main submodules
             var app = angular.module("app", [
-                'ui',
-                'commons',
-                'system',
-                'user',
+                'app.ui',
+                'app.commons',
+                'app.system',
+                'app.user',
                 ...
             ]);
         });
@@ -163,24 +163,12 @@ And the index file from App module:
 * *index.js*
 
         define([
-            'ui/index',
-            'commons/index',
-            'system/index',
-            'user/index',
+            './modules/ui/index',
+            './modules/commons/index',
+            './modules/system/index',
+            './modules/user/index',
             ...
         ]);
-
-There's one difference in the module app. It's because it's not present in the name of the submodules.
-The explication is simple, it's implicit that your main modules are under his hood, so there's no
-need to explicitly declarations. 
-
-**Wrong**:
-    
-    var bar = angular.module('app.foo.bar', [ ... ]);
-
-**Correct**:
-
-    var bar = angular.module('foo.bar', [ ... ]);
 
 
 And then, you'll have your require js main file, where you describe you dependencies and shim
@@ -230,13 +218,13 @@ Now, you can already run you application using AngularJS and RequireJS in the pr
 
 Constructors always have the **upper camel case** notation:
 
-    var MyController = function ( ... ) { ... };
+    function MyController ( ... ) { ... };
     
-    var MyService = function ( ... ) { ... };
+    function MyService ( ... ) { ... };
 
 The instances always have the **lower camel case** notation:
 
-    var MyAnotherController = function ( myService, anotherService) { ... };
+    function MyAnotherController ( myService, anotherService) { ... };
 
 ### Using the $inject property
 
@@ -245,17 +233,17 @@ You probably already have seen if you pass as arguments to the constructor, it w
 the provider factory create the instance of the artifact, like:
 
     ...
-    function ($scope, $filter, userService) {
+    function HomeController ($scope, $filter, userService) {
         //All the dependecies are already injected!
         ...
     }
     ...
 
-But there's a problem, when you minify you code, all the arguments names will be changed, and
-the Angular injector doesn't knows which are the providers. So, you will probably inject using
+**But there's a problem**, when you minify your code, all the arguments names will be changed, and
+the Angular injector doesn't knows which are the providers. So, to prevent this, you will probably inject using
 this format:
 
-**Wrong**
+**Avoid**
 
     ...
     ['$scope', '$filter', 'UserService', function ($scope, $filter, userService) {
@@ -268,30 +256,23 @@ this format:
 So the cleaner way to do this, is just use the *$inject* property. The injector will always first
 check if the given constructor have this property defined and do his work. So, your code will be like:
 
-**Right**
+**Recommended**
 
-    var UserController = function ($scope, $filter, userService) {
+    myModule.controller('UserController', UserController);
+        
+    UserController.$inject = ['$scope', '$filter', 'UserService']; //Done!
+    function UserController ($scope, $filter, userService) {
         //All the dependecies are already injected!
         ...
     }
-    UserController.$inject = ['$scope', '$filter', 'UserService']; //Done!
     
-    myModule.controller('UserController', UserController);
 
 ### Declaring the Artifacts
 
 Set the constructor to a variable, with the same name as the declared artifact:
 
-    var MyController = function ( ... ) { ... };
-    MyController.$inject = [ ... ];
-    
     myModule.controller('MyController', MyController);
-        
-With the exception of the resources instances, because they work like a **Model**:
+    
+    MyController.$inject = [ ... ];
+    function MyController ( ... ) { ... };
 
-    var UserResourceFactory = function( ... ) {
-        ...
-    };
-    
-    myModule.factory('User', UserResourceFactory);
-    
