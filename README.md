@@ -1,6 +1,6 @@
 # Angular AMD Style Guide
 A style guide for AngularJS using asynchronous module definition *(using RequireJS)*, based on style
-guides like the [John Papa Angular Style Guide] (https://github.com/johnpapa/angular-styleguide),
+guides like the [John Papa Angular Style Guide](https://github.com/johnpapa/angular-styleguide),
 [Google Style Guide](http://google.github.io/styleguide/angularjs-google-style.html) and the architecture
 of [Django apps](https://docs.djangoproject.com/en/1.8/intro/reusable-apps/).  
   
@@ -13,6 +13,7 @@ of [Django apps](https://docs.djangoproject.com/en/1.8/intro/reusable-apps/).
     * [Module Conventions](#module-conventions)
     * [The Root Module and the Starting Structure](#the-root-module-and-the-starting-structure)
 2. [Code Conventions](#code-conventions)
+    * [One Artifact per File](#one-artifact-per-file)
     * [Controllers and Partials](#controllers-and-partials)
     * [Directives and Templates](#directives-and-templates)
     * [Services and Factories](#services-and-factories)
@@ -25,7 +26,7 @@ They're not only Angular modules, but also AMD modules too.
 
 ### File Conventions
 * The files must be named into the dashing notation;
-* The file name must be followed by *dot* and the type of artifact delcared in the file, excepting the module file;
+* The file name must be followed by *dot* and the type of artifact declared in the file, excepting the module file;
 * The module file must have the same name as the module definition, using the dash notation;
 * A module contains directories to each type of artifact plus the templates and sub-modules.
 
@@ -98,11 +99,11 @@ define([
         'app.userLogin.mySubModule'
         'app.userLogin.mySubAnotherModule'
         'app.siblingModule'
-        ...
+        //...
     ]);
     
     userLogin.config = function(){
-        ...
+        //...
     };
 });
 ```
@@ -129,7 +130,7 @@ define([
     'controllers/user.controller',
     'directives/login-form.directive'
     'services/login.service',
-    ...
+    //...
     'modules/my-submodule/index',
     'modules/my-another-submodule/index'
     '../sibling-module/index'
@@ -160,7 +161,7 @@ define([
         'app.commons',
         'app.system',
         'app.user',
-        ...
+        //...
     ]);
 });
 ```
@@ -175,7 +176,7 @@ define([
     './modules/commons/index',
     './modules/system/index',
     './modules/user/index',
-    ...
+    //...
 ]);
 ```
 
@@ -189,17 +190,17 @@ require.config({
         angular: {
             noGlobal: true
         },
-        ...
+        //...
     },
     paths: {
         angular: 'vendor/angular/angular',
-        ...    
+        //...    
     },
     shim: {
-        ...    
+        //...    
     },
     deps: ['ng-bootstrap'],
-    ...
+    //...
     }
 ```
         
@@ -225,6 +226,31 @@ define('ng-bootstrap', [
 Now, you can already run you application using AngularJS and RequireJS in the proposed architeture.
 
 # Code Conventions
+
+### One Artifact per File
+Never put more than one artifact per file. This make constructors more easily found.  
+**See also [File Conventions](#file-conventions)
+
+### Postfix your Constructors Name
+Using postfixes based on type of constructors avoid name collisions.  
+e.g.: a service and a controller for **login**:
+
+```javascript
+function LoginController ( ... ) { ... }
+```
+and
+```javascript
+function LoginService ( ... ) { ... }
+```
+
+**except directives** *(see bellow)*
+
+### Namespace all application's directives
+Always namespace your applications directives to avoid name collisions. For example, you create a datepicker directive,
+but you need one more complex, so you install a angular plugins which contains a directive with the same name, resulting
+in a name collision. To avoid this, prefix with your application acronyms. If your application have the name **My Forecast**,
+create the directive like **mfDatepicker**.
+
 
 ### Using vm (View Model) reference
 Following the [John Papa](https://github.com/johnpapa/angular-styleguide#style-y032) recommendation, always use the
@@ -271,12 +297,12 @@ You probably already have seen if you pass as arguments to the constructor, it w
 the provider factory create the instance of the artifact, like:
 
 ```javascript
-...
+//...
 function HomeController ($scope, $filter, userService) {
     //All the dependecies are already injected!
-    ...
+    //...
 }
-...
+//...
 ```
 
 **But there's a problem**, when you minify your code, all the arguments names will be changed, and
@@ -298,19 +324,82 @@ So the cleaner way to do this, is just use the *$inject* property. The injector 
 check if the given constructor have this property defined and do his work. So, your code will be like:
 
 **Recommended**
-
 ```javascript
 myModule.controller('UserController', UserController);
     
 UserController.$inject = ['$scope', '$filter', 'UserService']; //Done!
 function UserController ($scope, $filter, userService) {
     //All the dependecies are already injected!
-    ...
+    //...
 }
 ```
 
 ### Controllers and Partials
-TODO
+
+Controllers are responsible by manage event and data flux between the components. **Always** bind one controller to one
+partial *(if you want to reuse a logic to more than one view, use directives)*. In a SPA, one controller corresponds to
+one action/route of your application, loading its partials to a "view container" inner your app template.
+You can break your partials in other partials so:
+
+**Avoid**
+```xhtml
+<div ng-controller="MyController as mv" ng-init="mv.init()">
+    <!-- MONOLITIC HTML! (hundreds of lines...) -->
+</div>    
+```
+
+**Recommended**
+```xhtml
+<div ng-controller="MyController as mv" ng-init="mv.init()">
+    <div ng-include=" '../partials/my-menu.partial.html' "></div>
+    <div ng-include=" '../partials/my-content.partial.html' "></div>
+    <div ng-include=" '../partials/my-footer.partial.html' "></div>
+</div>  
+```
+
+Always use the controller "initializer", to load data and set the default initial controller properties. Like almost
+everything in Angular are [*singletons*](https://en.wikipedia.org/wiki/Singleton_pattern), they execute the constructor
+one time (more precisely in the provider, which have a behavior of a factory), for dependency injection. So, if you enters
+the action which invokes a previous instantiated controller, he will maintain his anterior state:
+
+**Avoid**
+```xhtml
+<div ng-controller="MyController as mv">
+    <!-- content -->
+</div>
+```
+
+```javascript
+//...
+function MyController ($scope, $filter, User) {
+    var mv = this;
+    mv.user = User.get({id: 0});
+    //...
+}
+//...
+
+```
+
+**Recommended**
+```xhtml
+<div ng-controller="MyController as mv" ng-init="mv.init()">
+    <!-- content -->
+</div>
+```
+*Always creates a init method on the top level of your controller constructor body.*
+```javascript
+//...
+function MyController ($scope, $filter, User) {
+    var mv = this;
+    
+    mv.init = function(){
+        mv.user = User.get({id: 0});
+    }
+    //...
+}
+//...
+
+```
 
 ### Directives and Templates
 TODO
