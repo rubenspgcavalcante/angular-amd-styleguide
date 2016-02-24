@@ -336,6 +336,7 @@ function UserController ($scope, $filter, userService) {
 
 ### Controllers and Partials
 
+#### Controllers responsibility and fragmented partials
 Controllers are responsible by manage event and data flux between the components. **Always** bind one controller to one
 partial *(if you want to reuse a logic to more than one view, use directives)*. In a SPA, one controller corresponds to
 one action/route of your application, loading its partials to a "view container" inner your app template.
@@ -344,7 +345,7 @@ You can break your partials in other partials so:
 **Avoid**
 ```xhtml
 <div ng-controller="MyController as mv" ng-init="mv.init()">
-    <!-- MONOLITIC HTML! (hundreds of lines...) -->
+    <!-- MONOLITIC XHTML! (hundreds of lines...) -->
 </div>    
 ```
 
@@ -356,7 +357,36 @@ You can break your partials in other partials so:
     <div ng-include=" '../partials/my-footer.partial.html' "></div>
 </div>  
 ```
+------
 
+#### One action/route -> One controller
+Prefers to use **one** controller per action, because controllers are used to manage top level data and comunication
+between components (directives). Other reason is because controller share they scope to inner controllers via prototype, 
+causing *a lot* of problems *(just google it and see it!)*. So, use one top controller and in it directives instead of
+other controllers.
+
+**Avoid**
+```xhtml
+<div ng-controller="MyController as mv" ng-init="mv.init()">
+    <!-- some xhtml... -->
+    
+    <div ng-controller="UserTableListController">
+        <!-- more xhtml... -->
+    </div>
+    
+</div>    
+```
+
+**Recommended**
+```xhtml
+<div ng-controller="MyController as mv" ng-init="mv.init()">
+    <!-- some xhtml... -->
+    
+    <user-table-list ng-model='mv.users'></user-table-list>
+</div>  
+```
+------
+#### Controller initializer
 Always use the controller "initializer", to load data and set the default initial controller properties. Like almost
 everything in Angular are [*singletons*](https://en.wikipedia.org/wiki/Singleton_pattern), they execute the constructor
 one time (more precisely in the provider, which have a behavior of a factory), for dependency injection. So, if you enters
