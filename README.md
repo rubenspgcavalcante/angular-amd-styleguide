@@ -432,7 +432,71 @@ function MyController ($scope, $filter, User) {
 ```
 
 ### Directives and Templates
-TODO
+
+Directive acts like **web components** *(without the encapsulated CSS)*, and angular simulates this behaviour very well. 
+Another useful thing is that directives have a **isolated scope**, so you don't need to worry about sharing data into
+a non declarative way via scope, like controllers do.
+
+----
+#### Naming directives and prefixing the name
+Directives *don't need* postfix name declaration. But to avoid naming collisions with third party directives, always
+set your application prefix before the directive name. Use shortened prefixes, e.g.: Your application name is *Hello World*, 
+so your prefix will be *hl*
+
+
+**Avoid**
+```javascript
+//...
+
+myModule.directive('Calendar', Calendar);
+
+Calendar.$inject = ['SomeService'];
+function Calendar (someService) {
+    
+    return {
+        restrict: 'E',
+        // ...
+    };
+}
+//...
+
+```
+
+```xhtml
+<!-- Its easy to collide with some plugin's directive/web-component name -->
+<calendar><calendar>
+
+```
+
+**Recommended**
+```javascript
+//...
+
+myModule.directive('ThCalendar', thCalendar);
+
+thCalendar.$inject = ['SomeService'];
+function thCalendar (someService) {
+    
+    return {
+        restrict: 'E',
+        // ...
+    };
+}
+//...
+
+```
+
+```xhtml
+<!-- Problem solved! -->
+<th-calendar><th-calendar>
+
+```
+
+----
+#### Templates
+Templates represents a view, bound to a component, and must be portable for any part of your application. So, beware
+with local CSS rules to your templates. If you put your directive in another part of your system, it must be represented
+in the same way (unless your component has multiple templates/views depending on **his** state).
 
 ### Services and Factories
 TODO
