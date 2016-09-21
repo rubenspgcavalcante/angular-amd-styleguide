@@ -13,7 +13,7 @@ of [Django apps](https://docs.djangoproject.com/en/1.8/intro/reusable-apps/).
     * [Module Conventions](#module-conventions)
     * [The Root Module and the Starting Structure](#the-root-module-and-the-starting-structure)
 2. [Code Conventions](#code-conventions)
-    * [One Artifact per File](#one-artifact-per-file)
+    * [One Element per File](#one-element-per-file)
     * [Controllers and Partials](#controllers-and-partials)
     * [Directives and Templates](#directives-and-templates)
     * [Services and Factories](#services-and-factories)
@@ -26,9 +26,9 @@ They're not only Angular modules, but also AMD modules too.
 
 ### File Conventions
 * The files must be named into the dashing notation;
-* The file name must be followed by *dot* and the type of artifact declared in the file, excepting the module file;
+* The file name must be followed by *dot* and the type of element declared in the file, excepting the module file;
 * The module file must have the same name as the module definition, using the dash notation;
-* A module contains directories to each type of artifact plus the templates and sub-modules.
+* A module contains directories to each type of element plus the templates and sub-modules.
 
 e.g.: ( **+** Directory, **-** File)
 
@@ -181,7 +181,7 @@ define([
 ```
 
 
-Then, you'll have your require js main file, where you describe you dependencies and shim configurations:
+Then, you'll have your requireJS main file, where you describe you dependencies and shim configurations:
 
 ```javascript
 require.config({
@@ -227,8 +227,8 @@ Now, you can already run you application using AngularJS and RequireJS in the pr
 
 # Code Conventions
 
-### One Artifact per File
-Never put more than one artifact per file. This make constructors more easily found.  
+### One Element per File
+Never put more than one element per file. This make constructors more easily found.  
 **See also [File Conventions](#file-conventions)
 
 ### Postfix your Constructors Name
@@ -250,6 +250,7 @@ Always namespace your applications directives to avoid name collisions. For exam
 but you need one more complex, so you install a angular plugins which contains a directive with the same name, resulting
 in a name collision. To avoid this, prefix with your application acronyms. If your application have the name **My Forecast**,
 create the directive like **mfDatepicker**.
+<sup> Note that the angular built-in directives always comes with the *ng* prefix, e.g.: <... ng-controller='...'>, <... ng-click='...'> </sup>
 
 
 ### Using vm (View Model) reference
@@ -287,14 +288,14 @@ The instances always have the **lower camel case** notation:
 function MyAnotherController ( myService, anotherService) { ... }
 ```
 
-They always must have the artifact type of artifact in appended in the name like, for instance, *HomeController*, 
+They always must have the element type of element in appended in the name like, for instance, *HomeController*, 
 *LoginService* or *UserFactory*.
 
 ### Using the $inject property
 
-The AngularJS comes with a dependence injector, to load all dependencies of the declared artifact.
+The AngularJS comes with a dependence injector, to load all dependencies of the declared element.
 You probably already have seen if you pass as arguments to the constructor, it will load up before
-the provider factory create the instance of the artifact, like:
+the provider factory create the instance of the element, like:
 
 ```javascript
 //...
@@ -321,7 +322,7 @@ this format:
 ```
 
 So the cleaner way to do this, is just use the *$inject* property. The injector will always first
-check if the given constructor have this property defined and do his work. So, your code will be like:
+check if the given constructor have this metadata property defined and do his work. So, your code will be like:
 
 **Recommended**
 ```javascript
@@ -433,16 +434,15 @@ function MyController ($scope, $filter, User) {
 
 ### Directives and Templates
 
-Directive acts like **web components** *(without the encapsulated CSS)*, and angular simulates this behaviour very well. 
+Directive acts like a **web components** *(without the encapsulated CSS, the shadow DOM, etc)*, and angular simulates this behaviour very well. 
 Another useful thing is that directives have a **isolated scope**, so you don't need to worry about sharing data into
-a non declarative way via scope, like controllers do.
+a non declarative way via scope references, like controllers do.
 
 ----
 #### Naming directives and prefixing the name
-Directives *don't need* postfix name declaration. But to avoid naming collisions with third party directives, always
+Directives *don't need* postfix name declaration. As exmplained before, to avoid naming collisions with third party directives, you should
 set your application prefix before the directive name. Use shortened prefixes, e.g.: Your application name is *Hello World*, 
-so your prefix will be *hl*
-
+so your prefix will be *hl*. <sup>(the application acronym) </sup>
 
 **Avoid**
 ```javascript
@@ -464,7 +464,7 @@ function Calendar (someService) {
 
 ```xhtml
 <!-- Its easy to collide with some plugin's directive/web-component name -->
-<calendar><calendar>
+<calendar></calendar>
 
 ```
 
@@ -488,7 +488,7 @@ function thCalendar (someService) {
 
 ```xhtml
 <!-- Problem solved! -->
-<th-calendar><th-calendar>
+<th-calendar></th-calendar>
 
 ```
 
@@ -499,7 +499,129 @@ with local CSS rules to your templates. If you put your directive in another par
 in the same way (unless your component has multiple templates/views depending on **his** state).
 
 ### Services and Factories
-TODO
+
+####Some of author's personal thoughts
+There's always a **lot** of confusion about the service and the factory in angular 1.x applications. But let's keep it simple.  
+A **service** basically is a entity of you application which encapsulates some business rules and logic, and externally provides
+this for the application via a API.  
+A **factory** in the other hand, is a entity responsible for instantiate and the creation of
+specific objects, in application's run time. So, if you need to build one or more complex objects, with some specific configurations and
+with a similar behaviour, do this inside a factory!  
+**Simple right?** But a lot of angular application simply mix this two concepts and do *everything* with "services" using the factory provider! (???)  
+Just like this:  
+
+**Avoid**
+```javascript
+//...
+
+MyService.factory('MyService', MyService);
+
+MyService.$inject = ['OtherService'];
+function MyService (someService) {
+    
+    var _somePrivateMethod = function() {
+        //...
+    }
+    
+    return {
+        someMethod: function() {
+            //...
+        }
+    };
+}
+//...
+
+```
+
+**Recommended**
+```javascript
+//...
+
+MyService.service('MyService', MyService);
+
+MyService.$inject = ['OtherService'];
+function MyService (someService) {
+    var _somePrivateMethod = function() {
+        //...
+    }
+    
+    this.someMethod = function() {
+        //...
+    }
+}
+//...
+
+```
+
+Some developers argues, all in all the **service and the factory** will be created, in background, in a specific type of *factory* of the angular, the **provider**.
+But in response, I always explains in the background, the language uses the **JUMP** in the assembly code to do the flux control instructions, and in your code you can simply do
+using the **GOTO** statement. And after that I question: "Do you use the GOTO instead the 'if ... else', 'while' and 'for' in you application?".  
+So, if you building a really large application, instead overload the *factory provider* to act in multiple contexts, simply use the service provider to declare services and the 
+factory provider to declare factories. This way, you have benefits! e.g.: you can *decorate* your service provider and intercept the services creation, to log or do other stuff, without
+intercept wrongly some factory creations.
+
+#### The Factory
+ Always externalise the factory method. Commonly called as **build**, where you can pass some custom options to be joined with your default configuration
+ to build the instances.
+ 
+ **Example:**
+ 
+ ```javascript
+ //...
+ 
+ VehicleFactory.factory('VehicleFactory', VehicleFactory);
+ 
+ VehicleFactory.$inject = ['OtherService'];
+ function VehicleFactory (someService) {
+     
+     var _buildCar = function() {
+         //...
+     }
+     
+     var _buildTruck = function() {
+        //...
+     }
+     
+     return {
+         build: function(type) {
+             //...
+         }
+     };
+ }
+ //...
+```
+ 
+Factory generally are much simple. They centralize a lot of configuration, and encapsulates the **new** keyword there, letting your controllers and directives to be more clean.
+This is important, because a lot of **plugins** require configurations and explicit call they constructor. So, if you're porting a plugin to act like a component, using directives,
+the better way to call and instantiate the objects is in a factory, and not in the directive's constructor.
 
 ### Values and Constants
-TODO
+
+#### Constants
+Lot of configuration is also static so, basically you can define it using a constant. The advantage, is because the constants are available in *config* time. The constant notation is simple:
+ ```javascript
+ //...
+ 
+var ConfigExample = {
+    REQUEST_TIMEOUT: 60,
+    XHR: true,
+    DEFAULT_APPLICATION: 'application/json'
+};
+
+myModule.constant('ConfigExample', ConfigExample);
+ //...
+```
+
+#### Values
+When you need some processed values, the better way is to declare as a value. Differently the constant, values are not available in config, but in run time. The notation changes a little:
+ ```javascript
+ //...
+ 
+var LayoutDefinition = {
+    choosenTheme: localStorage.getItem("theme"),
+    //...
+};
+
+myModule.value('LayoutDefinition', LayoutDefinition);
+ //...
+```
